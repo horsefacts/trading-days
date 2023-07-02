@@ -94,8 +94,25 @@ contract TradingDays is BaseHook {
         return calendar.isHoliday(year, month, day);
     }
 
-    /// @notice Get the current holiday from the holiday calendar. See the
-    ///         Holiday enum in LibHoliday.sol for the full list of holidays.
+    /// @notice Get the current holiday from the holiday calendar. Enum values
+    ///         indexed from zero are:
+    ///
+    ///         - NOT_A_HOLIDAY (special value if today is not a holiday)
+    ///         - NEW_YEARS_DAY
+    ///         - MARTIN_LUTHER_KING_JR_DAY
+    ///         - WASHINGTONS_BIRTHDAY
+    ///         - GOOD_FRIDAY
+    ///         - MEMORIAL_DAY
+    ///         - JUNETEENTH_NATIONAL_INDEPENDENCE_DAY
+    ///         - INDEPENDENCE_DAY
+    ///         - LABOR_DAY
+    ///         - THANKSGIVING_DAY
+    ///         - CHRISTMAS_DAY
+    ///         - NEW_YEARS_DAY_OBSERVED
+    ///           (special value if New Year's Day is a Saturday. This doesn't
+    ///            actually make any sense and I think it's probably wrong.
+    ///            have you ever "observed" New Year's Day on New Year's Eve?!)
+    ///
     /// @dev TODO: Daylight savings time.
     function getHoliday() public view returns (Holiday) {
         (uint256 year, uint256 month, uint256 day) =
