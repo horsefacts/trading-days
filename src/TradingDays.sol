@@ -12,13 +12,19 @@ import { BokkyPooBahsDateTimeLibrary as LibDateTime } from
     "BokkyPooBahsDateTimeLibrary/contracts/BokkyPooBahsDateTimeLibrary.sol";
 import { HolidayCalendar } from "./HolidayCalendar.sol";
 import { LibHolidays, Holiday } from "./LibHolidays.sol";
+import { DST } from "./DST.sol";
+import { LibDST } from "./LibDST.sol";
 
 contract TradingDays is BaseHook {
     using LibHolidays for HolidayCalendar;
+    using LibDST for DST;
     using LibDateTime for uint256;
 
     /// @notice Data contract encoding NYSE holidays through 2123.
     HolidayCalendar public immutable calendar;
+
+    /// @notice Data contract encoding Daylight Savings start/end through 2123.
+    DST public immutable dst;
 
     enum State {
         HOLIDAY,
@@ -43,10 +49,11 @@ contract TradingDays is BaseHook {
     mapping(uint256 => mapping(uint256 => mapping(uint256 => bool))) public
         marketOpened;
 
-    constructor(IPoolManager _poolManager, address _calendar)
+    constructor(IPoolManager _poolManager, address _calendar, address _dst)
         BaseHook(_poolManager)
     {
         calendar = HolidayCalendar(_calendar);
+        dst = DST(_dst);
     }
 
     function getHooksCalls()
@@ -92,6 +99,14 @@ contract TradingDays is BaseHook {
         (uint256 year, uint256 month, uint256 day) =
             block.timestamp.timestampToDate();
         return calendar.isHoliday(year, month, day);
+    }
+
+    /// @notice Return true if it's Daylight Savings Time.
+    /// @dev TODO: Timezone adjustment from UTC.
+    function isDST() public view returns (bool) {
+        (uint256 year, uint256 month, uint256 day) =
+            block.timestamp.timestampToDate();
+        return dst.isDST(year, month, day);
     }
 
     /// @notice Get the current holiday from the holiday calendar. Enum values

@@ -12,8 +12,9 @@ contract TradingDaysImplementation is TradingDays {
     constructor(
         IPoolManager poolManager,
         address calendar,
+        address dst,
         TradingDays addressToEtch
-    ) TradingDays(poolManager, calendar) {
+    ) TradingDays(poolManager, calendar, dst) {
         Hooks.validateHookAddress(addressToEtch, getHooksCalls());
     }
 

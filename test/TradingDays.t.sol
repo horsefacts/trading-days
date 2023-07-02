@@ -32,6 +32,7 @@ import { TradingDaysImplementation } from
     "../src/implementation/TradingDaysImplementation.sol";
 import { Holiday } from "../src/LibHolidays.sol";
 import { HolidayCalendar } from "../src/HolidayCalendar.sol";
+import { DST } from "../src/DST.sol";
 
 contract TradingDaysTest is Test, Deployers, GasSnapshot {
     using LibDateTime for uint256;
@@ -51,6 +52,7 @@ contract TradingDaysTest is Test, Deployers, GasSnapshot {
     bytes32 poolId;
 
     HolidayCalendar calendar = new HolidayCalendar();
+    DST dst = new DST();
 
     function setUp() public {
         token0 = new TestERC20(2**128);
@@ -62,7 +64,7 @@ contract TradingDaysTest is Test, Deployers, GasSnapshot {
         // We do that via the Implementation contract to avoid deploying the
         // override with the production contract
         TradingDaysImplementation impl =
-        new TradingDaysImplementation(manager, address(calendar), tradingDays);
+        new TradingDaysImplementation(manager, address(calendar), address(dst), tradingDays);
         (, bytes32[] memory writes) = vm.accesses(address(impl));
         vm.etch(address(tradingDays), address(impl).code);
 
@@ -186,6 +188,48 @@ contract TradingDaysTest is Test, Deployers, GasSnapshot {
 
         bytes memory expectedError = abi.encodeWithSelector(
             TradingDays.ClosedForHoliday.selector, Holiday.LABOR_DAY
+        );
+        vm.expectRevert(expectedError);
+        swapRouter.swap(poolKey, params, testSettings);
+    }
+
+    function test_HolidayReverts_ClosedForHoliday_AccountsForTimezone_isDST() public {
+        uint256 SEP_4_2023_23_59_59_ET = 1693886399 - 4 hours;
+        vm.warp(SEP_4_2023_23_59_59_ET);
+
+        // Perform a test swap //
+        IPoolManager.SwapParams memory params = IPoolManager.SwapParams({
+            zeroForOne: true,
+            amountSpecified: 100,
+            sqrtPriceLimitX96: SQRT_RATIO_1_2
+        });
+
+        PoolSwapTest.TestSettings memory testSettings = PoolSwapTest
+            .TestSettings({ withdrawTokens: true, settleUsingTransfer: true });
+
+        bytes memory expectedError = abi.encodeWithSelector(
+            TradingDays.ClosedForHoliday.selector, Holiday.LABOR_DAY
+        );
+        vm.expectRevert(expectedError);
+        swapRouter.swap(poolKey, params, testSettings);
+    }
+
+    function test_HolidayReverts_ClosedForHoliday_AccountsForTimezone_notDST() public {
+        uint256 NOV_23_2023_23_59_59_ET = 1700801999 - 5 hours;
+        vm.warp(NOV_23_2023_23_59_59_ET);
+
+        // Perform a test swap //
+        IPoolManager.SwapParams memory params = IPoolManager.SwapParams({
+            zeroForOne: true,
+            amountSpecified: 100,
+            sqrtPriceLimitX96: SQRT_RATIO_1_2
+        });
+
+        PoolSwapTest.TestSettings memory testSettings = PoolSwapTest
+            .TestSettings({ withdrawTokens: true, settleUsingTransfer: true });
+
+        bytes memory expectedError = abi.encodeWithSelector(
+            TradingDays.ClosedForHoliday.selector, Holiday.THANKSGIVING_DAY
         );
         vm.expectRevert(expectedError);
         swapRouter.swap(poolKey, params, testSettings);
