@@ -20,6 +20,8 @@ import {BokkyPooBahsDateTimeLibrary as LibDateTime} from "BokkyPooBahsDateTimeLi
 
 import {TradingDays} from "../src/TradingDays.sol";
 import {TradingDaysImplementation} from "../src/implementation/TradingDaysImplementation.sol";
+import {Holiday} from "../src/LibHolidays.sol";
+import {HolidayCalendar} from "../src/HolidayCalendar.sol";
 
 contract TradingDaysTest is Test, Deployers, GasSnapshot {
     using LibDateTime for uint256;
@@ -39,6 +41,8 @@ contract TradingDaysTest is Test, Deployers, GasSnapshot {
     IPoolManager.PoolKey poolKey;
     bytes32 poolId;
 
+    HolidayCalendar calendar = new HolidayCalendar();
+
     function setUp() public {
         token0 = new TestERC20(2**128);
         token1 = new TestERC20(2**128);
@@ -46,7 +50,7 @@ contract TradingDaysTest is Test, Deployers, GasSnapshot {
 
         // Testing environment requires our contract to override `validateHookAddress`
         // well do that via the Implementation contract to avoid deploying the override with the production contract
-        TradingDaysImplementation impl = new TradingDaysImplementation(manager, tradingDays);
+        TradingDaysImplementation impl = new TradingDaysImplementation(manager, address(calendar), tradingDays);
         (, bytes32[] memory writes) = vm.accesses(address(impl));
         vm.etch(address(tradingDays), address(impl).code);
         // for each storage key that was written during the hook implementation, copy the value over
@@ -82,7 +86,7 @@ contract TradingDaysTest is Test, Deployers, GasSnapshot {
         token1.approve(address(swapRouter), 100 ether);
     }
 
-    function test_BeforeOpeningBellReverts_MarketClosed() public {
+    function test_BeforeOpeningBellReverts_AfterHours() public {
         uint256 JUN_5_2023_8_00_ET = 1685966400;
         vm.warp(JUN_5_2023_8_00_ET);
 
@@ -93,7 +97,7 @@ contract TradingDaysTest is Test, Deployers, GasSnapshot {
         PoolSwapTest.TestSettings memory testSettings =
             PoolSwapTest.TestSettings({withdrawTokens: true, settleUsingTransfer: true});
 
-        vm.expectRevert(TradingDays.MarketClosed.selector);
+        vm.expectRevert(TradingDays.AfterHours.selector);
         swapRouter.swap(
             poolKey,
             params,
@@ -101,7 +105,7 @@ contract TradingDaysTest is Test, Deployers, GasSnapshot {
         );
     }
 
-    function test_AfterOpeningBellReverts_MarketClosed() public {
+    function test_AfterOpeningBellReverts_AfterHours() public {
         uint256 JUN_5_2023_4_30_ET = 1685997000;
         vm.warp(JUN_5_2023_4_30_ET);
 
@@ -112,7 +116,7 @@ contract TradingDaysTest is Test, Deployers, GasSnapshot {
         PoolSwapTest.TestSettings memory testSettings =
             PoolSwapTest.TestSettings({withdrawTokens: true, settleUsingTransfer: true});
 
-        vm.expectRevert(TradingDays.MarketClosed.selector);
+        vm.expectRevert(TradingDays.AfterHours.selector);
         swapRouter.swap(
             poolKey,
             params,
@@ -120,7 +124,7 @@ contract TradingDaysTest is Test, Deployers, GasSnapshot {
         );
     }
 
-    function test_WeekendReverts_MarketClosed() public {
+    function test_WeekendReverts_ClosedForWeekend() public {
         uint256 JUN_4_2023_11_00_ET = 1685890800;
         vm.warp(JUN_4_2023_11_00_ET);
 
@@ -131,7 +135,30 @@ contract TradingDaysTest is Test, Deployers, GasSnapshot {
         PoolSwapTest.TestSettings memory testSettings =
             PoolSwapTest.TestSettings({withdrawTokens: true, settleUsingTransfer: true});
 
-        vm.expectRevert(TradingDays.MarketClosed.selector);
+        vm.expectRevert(TradingDays.ClosedForWeekend.selector);
+        swapRouter.swap(
+            poolKey,
+            params,
+            testSettings
+        );
+    }
+
+    function test_HolidayReverts_ClosedForHoliday() public {
+        uint256 SEP_4_2023_11_00_ET = 1693839600;
+        vm.warp(SEP_4_2023_11_00_ET);
+
+        // Perform a test swap //
+        IPoolManager.SwapParams memory params =
+            IPoolManager.SwapParams({zeroForOne: true, amountSpecified: 100, sqrtPriceLimitX96: SQRT_RATIO_1_2});
+
+        PoolSwapTest.TestSettings memory testSettings =
+            PoolSwapTest.TestSettings({withdrawTokens: true, settleUsingTransfer: true});
+
+        bytes memory expectedError = abi.encodeWithSelector(
+            TradingDays.ClosedForHoliday.selector,
+            Holiday.LABOR_DAY
+        );
+        vm.expectRevert(expectedError);
         swapRouter.swap(
             poolKey,
             params,
@@ -179,7 +206,8 @@ contract TradingDaysTest is Test, Deployers, GasSnapshot {
         assertEq(tradingDays.marketOpened(2023, 6, 5), true);
     }
 
-    function testFuzz_WeekendReverts_MarketClosed(uint256 timestamp) public {
+    function testFuzz_WeekendReverts_ClosedForWeekend(uint256 timestamp) public {
+        timestamp = bound(timestamp, LibDateTime.timestampFromDate(2023, 1, 1), LibDateTime.timestampFromDate(2042, 12, 31));
         vm.assume(timestamp.isWeekEnd());
         vm.warp(timestamp);
 
@@ -190,7 +218,7 @@ contract TradingDaysTest is Test, Deployers, GasSnapshot {
         PoolSwapTest.TestSettings memory testSettings =
             PoolSwapTest.TestSettings({withdrawTokens: true, settleUsingTransfer: true});
 
-        vm.expectRevert(TradingDays.MarketClosed.selector);
+        vm.expectRevert(TradingDays.ClosedForWeekend.selector);
         swapRouter.swap(
             poolKey,
             params,

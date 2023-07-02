@@ -8,7 +8,7 @@ import {IPoolManager} from "@uniswap/v4-core/contracts/interfaces/IPoolManager.s
 import {Hooks} from "@uniswap/v4-core/contracts/libraries/Hooks.sol";
 
 contract TradingDaysImplementation is TradingDays {
-    constructor(IPoolManager poolManager, TradingDays addressToEtch) TradingDays(poolManager) {
+    constructor(IPoolManager poolManager, address calendar, TradingDays addressToEtch) TradingDays(poolManager, calendar) {
         Hooks.validateHookAddress(addressToEtch, getHooksCalls());
     }
 

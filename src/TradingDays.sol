@@ -9,16 +9,29 @@ import {BalanceDelta} from "@uniswap/v4-core/contracts/types/BalanceDelta.sol";
 
 import {BokkyPooBahsDateTimeLibrary as LibDateTime} from "BokkyPooBahsDateTimeLibrary/contracts/BokkyPooBahsDateTimeLibrary.sol";
 import {HolidayCalendar} from "./HolidayCalendar.sol";
-import {LibHolidays} from "./LibHolidays.sol";
+import {LibHolidays, Holiday} from "./LibHolidays.sol";
 
 contract TradingDays is BaseHook {
     using LibHolidays for HolidayCalendar;
     using LibDateTime for uint256;
 
-    HolidayCalendar calendar = new HolidayCalendar();
+    HolidayCalendar immutable public calendar;
+
+    enum State {
+        HOLIDAY,
+        WEEKEND,
+        AFTER_HOURS,
+        OPEN
+    }
+
+    /// @notice No trading today, markets are closed for a holiday.
+    error ClosedForHoliday(Holiday holiday);
+
+    /// @notice Log off and touch grass.
+    error ClosedForWeekend();
 
     /// @notice Sorry, trading is closed for the day.
-    error MarketClosed();
+    error AfterHours();
 
     /// @notice Ring the opening bell.
     event DingDingDing();
@@ -26,7 +39,9 @@ contract TradingDays is BaseHook {
     /// @notice Year/month/day mapping recording whether the market opened.
     mapping(uint256 => mapping(uint256 => mapping(uint256 => bool))) public marketOpened;
 
-    constructor(IPoolManager _poolManager) BaseHook(_poolManager) {}
+    constructor(IPoolManager _poolManager, address _calendar) BaseHook(_poolManager) {
+        calendar = HolidayCalendar(_calendar);
+    }
 
     function getHooksCalls() public pure override returns (Hooks.Calls memory) {
         return Hooks.Calls({
@@ -55,19 +70,52 @@ contract TradingDays is BaseHook {
     }
 
     /// @notice Return true Mon-Fri, if it's not a holiday.
+    /// @dev TODO: Timezone adjustment.
     function isTradingDay() public view returns (bool) {
         return block.timestamp.isWeekDay() && !isHoliday();
     }
 
-    /// @notice Return true if day is a 2023-2026 financial holiday.
+    /// @notice Return true if day is a NYSE holiday.
+    /// @dev TODO: Timezone adjustment.
     function isHoliday() public view returns (bool) {
         (uint256 year, uint256 month, uint256 day) = block.timestamp.timestampToDate();
-        if (year < 2023 || year > 2026) return false;
         return calendar.isHoliday(year, month, day);
     }
 
+    function getHoliday() public view returns (Holiday) {
+        (uint256 year, uint256 month, uint256 day) = block.timestamp.timestampToDate();
+        return calendar.getHoliday(year, month, day);
+    }
+
     function marketIsOpen() public view returns (bool) {
-        return isTradingDay() && isCoreTradingHours();
+        return state() == State.OPEN;
+    }
+
+    function state() public view returns (State) {
+        if (isHoliday()) return State.HOLIDAY;
+        if (block.timestamp.isWeekEnd()) return State.WEEKEND;
+        if (!isCoreTradingHours()) return State.AFTER_HOURS;
+        return State.OPEN;
+    }
+
+    function beforeSwap(address, IPoolManager.PoolKey calldata, IPoolManager.SwapParams calldata)
+        external
+        override
+        returns (bytes4)
+    {
+        State s = state();
+
+        if (s == State.OPEN) {
+          _ringOpeningBell();
+        } else if (s == State.HOLIDAY) {
+            revert ClosedForHoliday(getHoliday());
+        } else if (s == State.WEEKEND) {
+            revert ClosedForWeekend();
+        } else if (s == State.AFTER_HOURS) {
+            revert AfterHours();
+        }
+
+        return BaseHook.beforeSwap.selector;
     }
 
     /// @dev The first swap of the trading day rings the opening bell.
@@ -77,16 +125,5 @@ contract TradingDays is BaseHook {
            marketOpened[year][month][day] = true;
            emit DingDingDing();
         }
-    }
-
-    function beforeSwap(address, IPoolManager.PoolKey calldata, IPoolManager.SwapParams calldata)
-        external
-        override
-        returns (bytes4)
-    {
-        if (!marketIsOpen()) revert MarketClosed();
-        _ringOpeningBell();
-
-        return BaseHook.beforeSwap.selector;
     }
 }
