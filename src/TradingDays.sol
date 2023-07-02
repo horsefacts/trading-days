@@ -7,23 +7,15 @@ import {BaseHook} from "v4-periphery/BaseHook.sol";
 import {IPoolManager} from "@uniswap/v4-core/contracts/interfaces/IPoolManager.sol";
 import {BalanceDelta} from "@uniswap/v4-core/contracts/types/BalanceDelta.sol";
 
-import {BokkyPooBahsDateTimeLibrary as DateTime} from "BokkyPooBahsDateTimeLibrary/contracts/BokkyPooBahsDateTimeLibrary.sol";
+import {BokkyPooBahsDateTimeLibrary as LibDateTime} from "BokkyPooBahsDateTimeLibrary/contracts/BokkyPooBahsDateTimeLibrary.sol";
+import {HolidayCalendar} from "./HolidayCalendar.sol";
+import {LibHolidays} from "./LibHolidays.sol";
 
 contract TradingDays is BaseHook {
-    using DateTime for uint256;
+    using LibHolidays for HolidayCalendar;
+    using LibDateTime for uint256;
 
-    enum Holiday {
-        NEW_YEARS_DAY,
-        MARTIN_LUTHER_KING_JR_DAY,
-        WASHINGTONS_BIRTHDAY,
-        GOOD_FRIDAY,
-        MEMORIAL_DAY,
-        JUNETEENTH_NATIONAL_INDEPENDENCE_DAY,
-        INDEPENDENCE_DAY,
-        LABOR_DAY,
-        THANKSGIVING_DAY,
-        CHRISTMAS_DAY
-    }
+    HolidayCalendar calendar = new HolidayCalendar();
 
     /// @notice Sorry, trading is closed for the day.
     error MarketClosed();
@@ -67,9 +59,11 @@ contract TradingDays is BaseHook {
         return block.timestamp.isWeekDay() && !isHoliday();
     }
 
-    /// @dev TODO: Implement holiday calendar.
-    function isHoliday() public pure returns (bool) {
-        return false;
+    /// @notice Return true if day is a 2023-2026 financial holiday.
+    function isHoliday() public view returns (bool) {
+        (uint256 year, uint256 month, uint256 day) = block.timestamp.timestampToDate();
+        if (year < 2023 || year > 2026) return false;
+        return calendar.isHoliday(year, month, day);
     }
 
     function marketIsOpen() public view returns (bool) {

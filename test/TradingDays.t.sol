@@ -16,10 +16,13 @@ import {PoolSwapTest} from "@uniswap/v4-core/contracts/test/PoolSwapTest.sol";
 import {PoolDonateTest} from "@uniswap/v4-core/contracts/test/PoolDonateTest.sol";
 import {Deployers} from "@uniswap/v4-core/test/foundry-tests/utils/Deployers.sol";
 import {CurrencyLibrary, Currency} from "@uniswap/v4-core/contracts/libraries/CurrencyLibrary.sol";
+import {BokkyPooBahsDateTimeLibrary as LibDateTime} from "BokkyPooBahsDateTimeLibrary/contracts/BokkyPooBahsDateTimeLibrary.sol";
+
 import {TradingDays} from "../src/TradingDays.sol";
 import {TradingDaysImplementation} from "../src/implementation/TradingDaysImplementation.sol";
 
 contract TradingDaysTest is Test, Deployers, GasSnapshot {
+    using LibDateTime for uint256;
     using PoolId for IPoolManager.PoolKey;
     using CurrencyLibrary for Currency;
 
@@ -174,6 +177,25 @@ contract TradingDaysTest is Test, Deployers, GasSnapshot {
             testSettings
         );
         assertEq(tradingDays.marketOpened(2023, 6, 5), true);
+    }
+
+    function testFuzz_WeekendReverts_MarketClosed(uint256 timestamp) public {
+        vm.assume(timestamp.isWeekEnd());
+        vm.warp(timestamp);
+
+        // Perform a test swap //
+        IPoolManager.SwapParams memory params =
+            IPoolManager.SwapParams({zeroForOne: true, amountSpecified: 100, sqrtPriceLimitX96: SQRT_RATIO_1_2});
+
+        PoolSwapTest.TestSettings memory testSettings =
+            PoolSwapTest.TestSettings({withdrawTokens: true, settleUsingTransfer: true});
+
+        vm.expectRevert(TradingDays.MarketClosed.selector);
+        swapRouter.swap(
+            poolKey,
+            params,
+            testSettings
+        );
     }
 
     function test_SubsequentSwapsDoNotRingOpeningBell() public {
