@@ -2,6 +2,8 @@
 pragma solidity ^0.8.15;
 
 /// @notice Data contract encoding Daylight Savings start/end timestamps.
+///         Each start/end pair is encoded as two 32-bit values, representing
+///         seconds since Jan 1, 2023. Use LibDaylightSavings to decode.
 contract DaylightSavingsCalendar {
     constructor() {
         bytes memory data = (
