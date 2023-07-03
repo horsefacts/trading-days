@@ -34,4 +34,4 @@ def get_hex_string_for_years(start_year, num_years):
         result.append(hex(end_timestamp)[2:].zfill(8))
     return ''.join(result)
 
-print(get_hex_string_for_years(2024, 100))
+print(get_hex_string_for_years(2023, 101))

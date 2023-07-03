@@ -28,4 +28,4 @@ def get_hex_string_for_year(year):
 def get_hex_string_for_years(start_year, num_years):
     return ''.join([get_hex_string_for_year(year) for year in range(start_year, start_year + num_years)])
 
-print(get_hex_string_for_years(2023, 100))
+print(get_hex_string_for_years(2023, 101))
