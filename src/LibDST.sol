@@ -8,34 +8,29 @@ library LibDST {
     ///         Years outside this range revert with this error.
     error YearNotFound();
 
-    /// @dev One byte. Width of leading STOP opcode and encoded pair.
-    uint256 private constant ONE_BYTE = 0x1;
+    /// @dev Size of the leading STOP opcode byte in the data contract.
+    uint256 private constant STOP_BYTE = 0x1;
 
-    /// @dev Offset copied bytes by 31 bytes, so the 1 byte encoded pair
+    /// @dev Width of one encoded timestamp pair.
+    uint256 private constant ONE_PAIR = 0xa;
+
+    /// @dev Offset copied bytes by 22 bytes, so the 10 byte encoded pair
     //       is laid out at the end of a 32-byte word in scratch space.
-    uint256 private constant COPY_OFFSET = 0x1f;
+    uint256 private constant COPY_OFFSET = 0x16;
 
     /// @dev Alias for scratch space memory address.
     uint256 private constant SCRATCH_SPACE = 0x0;
 
     /// @dev Width of one encoded date in bits.
-    uint256 private constant DATE_BIT_WIDTH = 3;
+    uint256 private constant DATE_BIT_WIDTH = 40;
 
-    /// @dev Mask to extract start from an encoded pair.
-    ///      0x38 == 0b111000
-    uint256 private constant START_BIT_MASK = 0x38;
+    /// @dev Mask to extract upper 40 bits from an encoded pair.
+    uint256 private constant START_BIT_MASK = 0xffffffffff0000000000;
 
-    /// @dev Mask to extract end from an encoded pair.
-    ///      0x7 == 0b000111
-    uint256 private constant END_BIT_MASK = 0x7;
+    /// @dev Mask to extract lower 40 bits from an encoded pair.
+    uint256 private constant END_BIT_MASK = 0xffffffffff;
 
-    /// @dev Offset to add to start value.
-    uint256 private constant START_OFFSET = 8;
-
-    /// @dev Offset to add to end value.
-    uint256 private constant END_OFFSET = 1;
-
-    function getDates(DST dst, uint256 year)
+    function getTimestamps(DST dst, uint256 year)
         internal
         view
         returns (uint256 start, uint256 end)
@@ -46,30 +41,12 @@ library LibDST {
             extcodecopy(
                 dst,
                 COPY_OFFSET,
-                add(ONE_BYTE, mul(sub(year, 2023), ONE_BYTE)),
-                ONE_BYTE
+                add(STOP_BYTE, mul(sub(year, 2023), ONE_PAIR)),
+                ONE_PAIR
             )
             let pair := mload(SCRATCH_SPACE)
-            start :=
-                add(shr(DATE_BIT_WIDTH, and(pair, START_BIT_MASK)), START_OFFSET)
-            end := add(and(pair, END_BIT_MASK), END_OFFSET)
-        }
-    }
-
-    function isDST(DST dst, uint256 year, uint256 month, uint256 day) internal view returns (bool) {
-        (uint256 start, uint256 end) = getDates(dst, year);
-        // If it's before March or after November, it's not DST.
-        if (month < 3 || month > 11) return false;
-        // If it's between March and November, we have to check the day..
-        if (month == 3) {
-            // If it's March, and the day is on or after the start, it's DST.
-            return (day >= start);
-        } else if (month < 11) {
-            // If the month is between March and November, DST is in effect
-            return true;
-        } else {
-            // It's November. If the day is before the end, it's DST.
-            return (day < end);
+            start := shr(DATE_BIT_WIDTH, and(pair, START_BIT_MASK))
+            end := and(pair, END_BIT_MASK)
         }
     }
 }

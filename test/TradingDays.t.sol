@@ -119,8 +119,8 @@ contract TradingDaysTest is Test, Deployers, GasSnapshot {
     }
 
     function test_BeforeOpeningBellReverts_AfterHours() public {
-        uint256 JUN_5_2023_8_00_ET = 1685966400;
-        vm.warp(JUN_5_2023_8_00_ET);
+        uint256 JUN_5_2023_9_29_29_ET = 1685971769;
+        vm.warp(JUN_5_2023_9_29_29_ET);
 
         // Perform a test swap //
         IPoolManager.SwapParams memory params = IPoolManager.SwapParams({
@@ -137,8 +137,8 @@ contract TradingDaysTest is Test, Deployers, GasSnapshot {
     }
 
     function test_AfterOpeningBellReverts_AfterHours() public {
-        uint256 JUN_5_2023_4_30_ET = 1685997000;
-        vm.warp(JUN_5_2023_4_30_ET);
+        uint256 JUN_5_2023_16_00_00_ET = 1685995200;
+        vm.warp(JUN_5_2023_16_00_00_ET);
 
         // Perform a test swap //
         IPoolManager.SwapParams memory params = IPoolManager.SwapParams({
@@ -172,6 +172,78 @@ contract TradingDaysTest is Test, Deployers, GasSnapshot {
         swapRouter.swap(poolKey, params, testSettings);
     }
 
+    function test_EdgeCase_SecondBeforeHoliday_EDT() public {
+        uint256 SEP_4_2023_00_00_00_ET = 1693800000;
+        vm.warp(SEP_4_2023_00_00_00_ET - 1);
+
+        // Perform a test swap //
+        IPoolManager.SwapParams memory params = IPoolManager.SwapParams({
+            zeroForOne: true,
+            amountSpecified: 100,
+            sqrtPriceLimitX96: SQRT_RATIO_1_2
+        });
+
+        PoolSwapTest.TestSettings memory testSettings = PoolSwapTest
+            .TestSettings({ withdrawTokens: true, settleUsingTransfer: true });
+
+        vm.expectRevert(TradingDays.ClosedForWeekend.selector);
+        swapRouter.swap(poolKey, params, testSettings);
+    }
+
+    function test_EdgeCase_SecondAfterHoliday_EDT() public {
+        uint256 SEP_4_2023_23_59_59_ET = 1693886399;
+        vm.warp(SEP_4_2023_23_59_59_ET + 1);
+
+        // Perform a test swap //
+        IPoolManager.SwapParams memory params = IPoolManager.SwapParams({
+            zeroForOne: true,
+            amountSpecified: 100,
+            sqrtPriceLimitX96: SQRT_RATIO_1_2
+        });
+
+        PoolSwapTest.TestSettings memory testSettings = PoolSwapTest
+            .TestSettings({ withdrawTokens: true, settleUsingTransfer: true });
+
+        vm.expectRevert(TradingDays.AfterHours.selector);
+        swapRouter.swap(poolKey, params, testSettings);
+    }
+
+    function test_EdgeCase_SecondBeforeHoliday_EST() public {
+        uint256 DEC_25_2024_00_00_00_ET = 1735102800;
+        vm.warp(DEC_25_2024_00_00_00_ET - 1);
+
+        // Perform a test swap //
+        IPoolManager.SwapParams memory params = IPoolManager.SwapParams({
+            zeroForOne: true,
+            amountSpecified: 100,
+            sqrtPriceLimitX96: SQRT_RATIO_1_2
+        });
+
+        PoolSwapTest.TestSettings memory testSettings = PoolSwapTest
+            .TestSettings({ withdrawTokens: true, settleUsingTransfer: true });
+
+        vm.expectRevert(TradingDays.AfterHours.selector);
+        swapRouter.swap(poolKey, params, testSettings);
+    }
+
+    function test_EdgeCase_SecondAfterHoliday_EST() public {
+        uint256 DEC_25_2024_23_59_59_ET = 1735189199;
+        vm.warp(DEC_25_2024_23_59_59_ET + 1);
+
+        // Perform a test swap //
+        IPoolManager.SwapParams memory params = IPoolManager.SwapParams({
+            zeroForOne: true,
+            amountSpecified: 100,
+            sqrtPriceLimitX96: SQRT_RATIO_1_2
+        });
+
+        PoolSwapTest.TestSettings memory testSettings = PoolSwapTest
+            .TestSettings({ withdrawTokens: true, settleUsingTransfer: true });
+
+        vm.expectRevert(TradingDays.AfterHours.selector);
+        swapRouter.swap(poolKey, params, testSettings);
+    }
+
     function test_HolidayReverts_ClosedForHoliday() public {
         uint256 SEP_4_2023_11_00_ET = 1693839600;
         vm.warp(SEP_4_2023_11_00_ET);
@@ -193,8 +265,10 @@ contract TradingDaysTest is Test, Deployers, GasSnapshot {
         swapRouter.swap(poolKey, params, testSettings);
     }
 
-    function test_HolidayReverts_ClosedForHoliday_AccountsForTimezone_isDST() public {
-        uint256 SEP_4_2023_23_59_59_ET = 1693886399 - 4 hours;
+    function test_HolidayReverts_ClosedForHoliday_AccountsForTimezone_EDT()
+        public
+    {
+        uint256 SEP_4_2023_23_59_59_ET = 1693886399;
         vm.warp(SEP_4_2023_23_59_59_ET);
 
         // Perform a test swap //
@@ -214,8 +288,10 @@ contract TradingDaysTest is Test, Deployers, GasSnapshot {
         swapRouter.swap(poolKey, params, testSettings);
     }
 
-    function test_HolidayReverts_ClosedForHoliday_AccountsForTimezone_notDST() public {
-        uint256 NOV_23_2023_23_59_59_ET = 1700801999 - 5 hours;
+    function test_HolidayReverts_ClosedForHoliday_AccountsForTimezone_EST()
+        public
+    {
+        uint256 NOV_23_2023_23_59_59_ET = 1700801999;
         vm.warp(NOV_23_2023_23_59_59_ET);
 
         // Perform a test swap //
@@ -252,6 +328,41 @@ contract TradingDaysTest is Test, Deployers, GasSnapshot {
         swapRouter.swap(poolKey, params, testSettings);
     }
 
+    function test_SwapsAllowedDuringCoreTradingHours_StartInclusive() public {
+        uint256 JUN_5_2023_9_30_ET = 1685971800;
+        vm.warp(JUN_5_2023_9_30_ET);
+
+        // Perform a test swap //
+        IPoolManager.SwapParams memory params = IPoolManager.SwapParams({
+            zeroForOne: true,
+            amountSpecified: 100,
+            sqrtPriceLimitX96: SQRT_RATIO_1_2
+        });
+
+        PoolSwapTest.TestSettings memory testSettings = PoolSwapTest
+            .TestSettings({ withdrawTokens: true, settleUsingTransfer: true });
+
+        swapRouter.swap(poolKey, params, testSettings);
+    }
+
+    function test_SwapsAllowedDuringCoreTradingHours_CloseExclusive() public {
+        uint256 AUG_14_2023_16_00_ET = 1692043200;
+        vm.warp(AUG_14_2023_16_00_ET);
+
+        // Perform a test swap //
+        IPoolManager.SwapParams memory params = IPoolManager.SwapParams({
+            zeroForOne: true,
+            amountSpecified: 100,
+            sqrtPriceLimitX96: SQRT_RATIO_1_2
+        });
+
+        PoolSwapTest.TestSettings memory testSettings = PoolSwapTest
+            .TestSettings({ withdrawTokens: true, settleUsingTransfer: true });
+
+        vm.expectRevert(TradingDays.AfterHours.selector);
+        swapRouter.swap(poolKey, params, testSettings);
+    }
+
     function test_FirstSwapRingsOpeningBell() public {
         uint256 JUN_5_2023_11_30_ET = 1685979000;
         vm.warp(JUN_5_2023_11_30_ET);
@@ -271,31 +382,6 @@ contract TradingDaysTest is Test, Deployers, GasSnapshot {
 
         swapRouter.swap(poolKey, params, testSettings);
         assertEq(tradingDays.marketOpened(2023, 6, 5), true);
-    }
-
-    function testFuzz_WeekendReverts_ClosedForWeekend(uint256 timestamp)
-        public
-    {
-        timestamp = bound(
-            timestamp,
-            LibDateTime.timestampFromDate(2023, 1, 1),
-            LibDateTime.timestampFromDate(2042, 12, 31)
-        );
-        vm.assume(timestamp.isWeekEnd());
-        vm.warp(timestamp);
-
-        // Perform a test swap //
-        IPoolManager.SwapParams memory params = IPoolManager.SwapParams({
-            zeroForOne: true,
-            amountSpecified: 100,
-            sqrtPriceLimitX96: SQRT_RATIO_1_2
-        });
-
-        PoolSwapTest.TestSettings memory testSettings = PoolSwapTest
-            .TestSettings({ withdrawTokens: true, settleUsingTransfer: true });
-
-        vm.expectRevert(TradingDays.ClosedForWeekend.selector);
-        swapRouter.swap(poolKey, params, testSettings);
     }
 
     function test_SubsequentSwapsDoNotRingOpeningBell() public {

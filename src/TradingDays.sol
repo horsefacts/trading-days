@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.15;
-
+import "forge-std/console.sol";
 import { Hooks } from "@uniswap/v4-core/contracts/libraries/Hooks.sol";
 import { BaseHook } from "v4-periphery/BaseHook.sol";
 
@@ -23,7 +23,7 @@ contract TradingDays is BaseHook {
     /// @notice Data contract encoding NYSE holidays through 2123.
     HolidayCalendar public immutable calendar;
 
-    /// @notice Data contract encoding Daylight Savings start/end through 2123.
+    /// @notice Data contract encoding DST start/end timestamps through 2123.
     DST public immutable dst;
 
     enum State {
@@ -75,12 +75,11 @@ contract TradingDays is BaseHook {
     }
 
     /// @notice Return true between 9:30 AM and 4:00 PM ET.
-    /// @dev TODO: Daylight savings time.
     function isCoreTradingHours() public view returns (bool) {
-        uint256 hour = block.timestamp.getHour();
-        if (hour >= 13 && hour < 20) {
-            if (hour == 13) {
-                return block.timestamp.getMinute() >= 30;
+        uint256 hour = time().getHour();
+        if (hour >= 9 && hour < 16) {
+            if (hour == 9) {
+                return time().getMinute() >= 30;
             }
             return true;
         }
@@ -88,25 +87,28 @@ contract TradingDays is BaseHook {
     }
 
     /// @notice Return true Mon-Fri, if it's not a holiday.
-    /// @dev TODO: Timezone adjustment from UTC.
     function isTradingDay() public view returns (bool) {
-        return block.timestamp.isWeekDay() && !isHoliday();
+        return time().isWeekDay() && !isHoliday();
     }
 
     /// @notice Return true if day is a NYSE holiday.
-    /// @dev TODO: Timezone adjustment from UTC.
     function isHoliday() public view returns (bool) {
         (uint256 year, uint256 month, uint256 day) =
-            block.timestamp.timestampToDate();
+            time().timestampToDate();
         return calendar.isHoliday(year, month, day);
     }
 
     /// @notice Return true if it's Daylight Savings Time.
-    /// @dev TODO: Timezone adjustment from UTC.
     function isDST() public view returns (bool) {
-        (uint256 year, uint256 month, uint256 day) =
-            block.timestamp.timestampToDate();
-        return dst.isDST(year, month, day);
+        uint256 year = block.timestamp.getYear();
+        (uint256 start, uint256 end) = dst.getTimestamps(year);
+        return block.timestamp >= start && block.timestamp < end;
+    }
+
+    /// @notice Adjust block timestamp to US Eastern Time.
+    function time() public view returns (uint256) {
+        uint256 offset = isDST() ? 4 hours : 5 hours;
+        return block.timestamp - offset;
     }
 
     /// @notice Get the current holiday from the holiday calendar. Enum values
@@ -124,14 +126,11 @@ contract TradingDays is BaseHook {
     ///         - THANKSGIVING_DAY
     ///         - CHRISTMAS_DAY
     ///         - NEW_YEARS_DAY_OBSERVED
-    ///           (special value if New Year's Day is a Saturday. This doesn't
-    ///            actually make any sense and I think it's probably wrong.
-    ///            have you ever "observed" New Year's Day on New Year's Eve?!)
+    ///          (special value if New Year's Day falls on a Saturday)
     ///
-    /// @dev TODO: Daylight savings time.
     function getHoliday() public view returns (Holiday) {
         (uint256 year, uint256 month, uint256 day) =
-            block.timestamp.timestampToDate();
+            time().timestampToDate();
         return calendar.getHoliday(year, month, day);
     }
 
@@ -140,10 +139,10 @@ contract TradingDays is BaseHook {
         return state() == State.OPEN;
     }
 
-    /// @notice Return State of the market at current block.timestamp.
+    /// @notice Return State at current block.timestamp.
     function state() public view returns (State) {
         if (isHoliday()) return State.HOLIDAY;
-        if (block.timestamp.isWeekEnd()) return State.WEEKEND;
+        if (time().isWeekEnd()) return State.WEEKEND;
         if (!isCoreTradingHours()) return State.AFTER_HOURS;
         return State.OPEN;
     }
@@ -171,7 +170,7 @@ contract TradingDays is BaseHook {
     /// @dev The first swap of the trading day rings the opening bell.
     function _ringOpeningBell() internal {
         (uint256 year, uint256 month, uint256 day) =
-            block.timestamp.timestampToDate();
+            time().timestampToDate();
         // If the market already opened today, don't ring the bell again.
         if (marketOpened[year][month][day]) return;
 
