@@ -2,7 +2,7 @@
 pragma solidity ^0.8.15;
 
 /// @notice Data contract encoding Daylight Savings start/end timestamps.
-contract DST {
+contract DaylightSavingsCalendar {
     constructor() {
         bytes memory data = (
             hex"00" // STOP opcode

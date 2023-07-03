@@ -3,13 +3,13 @@ pragma solidity ^0.8.15;
 
 import "forge-std/Test.sol";
 
-import { DST } from "../src/DST.sol";
-import { LibDST } from "../src/LibDST.sol";
+import { DaylightSavingsCalendar } from "../src/calendars/DaylightSavingsCalendar.sol";
+import { LibDaylightSavings } from "../src/calendars/LibDaylightSavings.sol";
 
-contract DSTTest is Test {
-    using LibDST for DST;
+contract DaylightSavingsTest is Test {
+    using LibDaylightSavings for DaylightSavingsCalendar;
 
-    DST dst = new DST();
+    DaylightSavingsCalendar dst = new DaylightSavingsCalendar();
 
     function test_DST_StartEndTimestamps() public {
         assertDSTStartEndEq(2023, 1678604400, 1699167600);

@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.15;
 
-import { DST } from "./DST.sol";
+import { DaylightSavingsCalendar } from "./DaylightSavingsCalendar.sol";
 
-library LibDST {
+library LibDaylightSavings {
     /// @notice LibDaylightSavings supports 100 years, from 2023 to 2123.
     ///         Years outside this range revert with this error.
     error YearNotFound();
@@ -30,7 +30,7 @@ library LibDST {
     /// @dev Mask to extract lower 40 bits from an encoded pair.
     uint256 private constant END_BIT_MASK = 0xffffffffff;
 
-    function getTimestamps(DST dst, uint256 year)
+    function getTimestamps(DaylightSavingsCalendar dst, uint256 year)
         internal
         view
         returns (uint256 start, uint256 end)

@@ -1,30 +1,29 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.15;
-import "forge-std/console.sol";
+
 import { Hooks } from "@uniswap/v4-core/contracts/libraries/Hooks.sol";
 import { BaseHook } from "v4-periphery/BaseHook.sol";
-
 import { IPoolManager } from
     "@uniswap/v4-core/contracts/interfaces/IPoolManager.sol";
 import { BalanceDelta } from "@uniswap/v4-core/contracts/types/BalanceDelta.sol";
-
 import { BokkyPooBahsDateTimeLibrary as LibDateTime } from
     "BokkyPooBahsDateTimeLibrary/contracts/BokkyPooBahsDateTimeLibrary.sol";
-import { HolidayCalendar } from "./HolidayCalendar.sol";
-import { LibHolidays, Holiday } from "./LibHolidays.sol";
-import { DST } from "./DST.sol";
-import { LibDST } from "./LibDST.sol";
+
+import { HolidayCalendar } from "./calendars/HolidayCalendar.sol";
+import { LibHolidays, Holiday } from "./calendars/LibHolidays.sol";
+import { DaylightSavingsCalendar } from "./calendars/DaylightSavingsCalendar.sol";
+import { LibDaylightSavings } from "./calendars/LibDaylightSavings.sol";
 
 contract TradingDays is BaseHook {
     using LibHolidays for HolidayCalendar;
-    using LibDST for DST;
+    using LibDaylightSavings for DaylightSavingsCalendar;
     using LibDateTime for uint256;
 
     /// @notice Data contract encoding NYSE holidays through 2123.
-    HolidayCalendar public immutable calendar;
+    HolidayCalendar public immutable holidays;
 
     /// @notice Data contract encoding DST start/end timestamps through 2123.
-    DST public immutable dst;
+    DaylightSavingsCalendar public immutable dst;
 
     enum State {
         HOLIDAY,
@@ -49,11 +48,11 @@ contract TradingDays is BaseHook {
     mapping(uint256 => mapping(uint256 => mapping(uint256 => bool))) public
         marketOpened;
 
-    constructor(IPoolManager _poolManager, address _calendar, address _dst)
+    constructor(IPoolManager _poolManager, address _holidays, address _dst)
         BaseHook(_poolManager)
     {
-        calendar = HolidayCalendar(_calendar);
-        dst = DST(_dst);
+        holidays = HolidayCalendar(_holidays);
+        dst = DaylightSavingsCalendar(_dst);
     }
 
     function getHooksCalls()
@@ -95,11 +94,15 @@ contract TradingDays is BaseHook {
     function isHoliday() public view returns (bool) {
         (uint256 year, uint256 month, uint256 day) =
             time().timestampToDate();
-        return calendar.isHoliday(year, month, day);
+        return holidays.isHoliday(year, month, day);
     }
 
-    /// @notice Return true if it's Daylight Savings Time.
+    /// @notice Return true if it's Daylight Savings Time in New York.
     function isDST() public view returns (bool) {
+        // The DST calendar stores exact timestamps for start/end of DST in
+        // New York. This and time() should be the only calculations that
+        // use block.timestamp directly. Everything else should use time(),
+        // which adjusts all datetime calculations to US Eastern Time.
         uint256 year = block.timestamp.getYear();
         (uint256 start, uint256 end) = dst.getTimestamps(year);
         return block.timestamp >= start && block.timestamp < end;
@@ -107,8 +110,7 @@ contract TradingDays is BaseHook {
 
     /// @notice Adjust block timestamp to US Eastern Time.
     function time() public view returns (uint256) {
-        uint256 offset = isDST() ? 4 hours : 5 hours;
-        return block.timestamp - offset;
+        return block.timestamp - (isDST() ? 4 hours : 5 hours);
     }
 
     /// @notice Get the current holiday from the holiday calendar. Enum values
@@ -131,7 +133,7 @@ contract TradingDays is BaseHook {
     function getHoliday() public view returns (Holiday) {
         (uint256 year, uint256 month, uint256 day) =
             time().timestampToDate();
-        return calendar.getHoliday(year, month, day);
+        return holidays.getHoliday(year, month, day);
     }
 
     /// @notice Return true if the market is open at current block.timestamp.
@@ -139,7 +141,7 @@ contract TradingDays is BaseHook {
         return state() == State.OPEN;
     }
 
-    /// @notice Return State at current block.timestamp.
+    /// @notice Return market state at current block.timestamp.
     function state() public view returns (State) {
         if (isHoliday()) return State.HOLIDAY;
         if (time().isWeekEnd()) return State.WEEKEND;

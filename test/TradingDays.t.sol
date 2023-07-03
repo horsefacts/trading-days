@@ -30,9 +30,9 @@ import { BokkyPooBahsDateTimeLibrary as LibDateTime } from
 import { TradingDays } from "../src/TradingDays.sol";
 import { TradingDaysImplementation } from
     "../src/implementation/TradingDaysImplementation.sol";
-import { Holiday } from "../src/LibHolidays.sol";
-import { HolidayCalendar } from "../src/HolidayCalendar.sol";
-import { DST } from "../src/DST.sol";
+import { Holiday } from "../src/calendars/LibHolidays.sol";
+import { HolidayCalendar } from "../src/calendars/HolidayCalendar.sol";
+import { DaylightSavingsCalendar } from "../src/calendars/DaylightSavingsCalendar.sol";
 
 contract TradingDaysTest is Test, Deployers, GasSnapshot {
     using LibDateTime for uint256;
@@ -51,8 +51,8 @@ contract TradingDaysTest is Test, Deployers, GasSnapshot {
     IPoolManager.PoolKey poolKey;
     bytes32 poolId;
 
-    HolidayCalendar calendar = new HolidayCalendar();
-    DST dst = new DST();
+    HolidayCalendar holidays = new HolidayCalendar();
+    DaylightSavingsCalendar dst = new DaylightSavingsCalendar();
 
     function setUp() public {
         token0 = new TestERC20(2**128);
@@ -64,7 +64,7 @@ contract TradingDaysTest is Test, Deployers, GasSnapshot {
         // We do that via the Implementation contract to avoid deploying the
         // override with the production contract
         TradingDaysImplementation impl =
-        new TradingDaysImplementation(manager, address(calendar), address(dst), tradingDays);
+        new TradingDaysImplementation(manager, address(holidays), address(dst), tradingDays);
         (, bytes32[] memory writes) = vm.accesses(address(impl));
         vm.etch(address(tradingDays), address(impl).code);
 
