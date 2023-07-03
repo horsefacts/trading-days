@@ -3,7 +3,8 @@ pragma solidity ^0.8.15;
 
 import "forge-std/Test.sol";
 
-import { DaylightSavingsCalendar } from "../src/calendars/DaylightSavingsCalendar.sol";
+import { DaylightSavingsCalendar } from
+    "../src/calendars/DaylightSavingsCalendar.sol";
 import { LibDaylightSavings } from "../src/calendars/LibDaylightSavings.sol";
 
 contract DaylightSavingsTest is Test {

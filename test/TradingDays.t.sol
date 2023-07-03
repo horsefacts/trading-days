@@ -32,7 +32,8 @@ import { TradingDaysImplementation } from
     "../src/implementation/TradingDaysImplementation.sol";
 import { Holiday } from "../src/calendars/LibHolidays.sol";
 import { HolidayCalendar } from "../src/calendars/HolidayCalendar.sol";
-import { DaylightSavingsCalendar } from "../src/calendars/DaylightSavingsCalendar.sol";
+import { DaylightSavingsCalendar } from
+    "../src/calendars/DaylightSavingsCalendar.sol";
 
 contract TradingDaysTest is Test, Deployers, GasSnapshot {
     using LibDateTime for uint256;

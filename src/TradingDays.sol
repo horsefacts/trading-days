@@ -11,7 +11,8 @@ import { BokkyPooBahsDateTimeLibrary as LibDateTime } from
 
 import { HolidayCalendar } from "./calendars/HolidayCalendar.sol";
 import { LibHolidays, Holiday } from "./calendars/LibHolidays.sol";
-import { DaylightSavingsCalendar } from "./calendars/DaylightSavingsCalendar.sol";
+import { DaylightSavingsCalendar } from
+    "./calendars/DaylightSavingsCalendar.sol";
 import { LibDaylightSavings } from "./calendars/LibDaylightSavings.sol";
 
 contract TradingDays is BaseHook {
@@ -92,8 +93,7 @@ contract TradingDays is BaseHook {
 
     /// @notice Return true if day is a NYSE holiday.
     function isHoliday() public view returns (bool) {
-        (uint256 year, uint256 month, uint256 day) =
-            time().timestampToDate();
+        (uint256 year, uint256 month, uint256 day) = time().timestampToDate();
         return holidays.isHoliday(year, month, day);
     }
 
@@ -131,8 +131,7 @@ contract TradingDays is BaseHook {
     ///          (special value if New Year's Day falls on a Saturday)
     ///
     function getHoliday() public view returns (Holiday) {
-        (uint256 year, uint256 month, uint256 day) =
-            time().timestampToDate();
+        (uint256 year, uint256 month, uint256 day) = time().timestampToDate();
         return holidays.getHoliday(year, month, day);
     }
 
@@ -171,8 +170,7 @@ contract TradingDays is BaseHook {
 
     /// @dev The first swap of the trading day rings the opening bell.
     function _ringOpeningBell() internal {
-        (uint256 year, uint256 month, uint256 day) =
-            time().timestampToDate();
+        (uint256 year, uint256 month, uint256 day) = time().timestampToDate();
         // If the market already opened today, don't ring the bell again.
         if (marketOpened[year][month][day]) return;
 
