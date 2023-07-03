@@ -1,20 +1,20 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.19;
 
-import { TradingDays } from "../TradingDays.sol";
+import { TradingDaysHook } from "../TradingDaysHook.sol";
 
 import { BaseHook } from "v4-periphery/BaseHook.sol";
 import { IPoolManager } from
     "@uniswap/v4-core/contracts/interfaces/IPoolManager.sol";
 import { Hooks } from "@uniswap/v4-core/contracts/libraries/Hooks.sol";
 
-contract TradingDaysImplementation is TradingDays {
+contract TradingDaysImplementation is TradingDaysHook {
     constructor(
         IPoolManager poolManager,
         address calendar,
         address dst,
-        TradingDays addressToEtch
-    ) TradingDays(poolManager, calendar, dst) {
+        TradingDaysHook addressToEtch
+    ) TradingDaysHook(poolManager, calendar, dst) {
         Hooks.validateHookAddress(addressToEtch, getHooksCalls());
     }
 

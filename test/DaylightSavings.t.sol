@@ -113,6 +113,7 @@ contract DaylightSavingsTest is Test {
         assertDSTStartEndEq(2120, 4739497200, 4760060400);
         assertDSTStartEndEq(2121, 4770946800, 4791510000);
         assertDSTStartEndEq(2122, 4802396400, 4822959600);
+        assertDSTStartEndEq(2123, 4834450800, 4855014000);
     }
 
     function assertDSTStartEndEq(uint256 year, uint256 s, uint256 e) internal {

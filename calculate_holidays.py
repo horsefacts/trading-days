@@ -11,9 +11,6 @@ def get_encoded_date(date):
 
 def get_hex_string_for_year(year):
     holiday_dates = get_holiday_dates(year)
-    print(year, len(holiday_dates))
-    if year == 2028:
-        print(holiday_dates)
     encoded_dates = [get_encoded_date(date) for (date, _) in holiday_dates]
     if len(encoded_dates) == 9:
         encoded_dates.insert(0, 0)

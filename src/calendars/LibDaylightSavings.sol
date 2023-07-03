@@ -18,7 +18,7 @@ library LibDaylightSavings {
     uint256 private constant ONE_PAIR = 0x8;
 
     /// @dev Offset copied bytes by 24 bytes, so the 8 byte encoded pair
-    //       is laid out at the end of a 32-byte word in scratch space.
+    ///      is laid out at the end of a 32-byte word in scratch space.
     uint256 private constant COPY_OFFSET = 0x18;
 
     /// @dev Alias for scratch space memory address.
@@ -27,10 +27,10 @@ library LibDaylightSavings {
     /// @dev Width of one encoded date in bits.
     uint256 private constant DATE_BIT_WIDTH = 32;
 
-    /// @dev Mask to extract upper 40 bits from an encoded pair.
+    /// @dev Mask to extract upper 32 bits from an encoded pair.
     uint256 private constant START_BIT_MASK = 0xffffffff00000000;
 
-    /// @dev Mask to extract lower 40 bits from an encoded pair.
+    /// @dev Mask to extract lower 32 bits from an encoded pair.
     uint256 private constant END_BIT_MASK = 0xffffffff;
 
     function getTimestamps(DaylightSavingsCalendar dst, uint256 year)

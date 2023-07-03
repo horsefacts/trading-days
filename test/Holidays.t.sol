@@ -192,6 +192,9 @@ contract HolidaysTest is Test {
         assertEq(calendar.isHoliday(2024, 3, 29), true);
         assertEq(calendar.isHoliday(2025, 6, 19), true);
         assertEq(calendar.isHoliday(2026, 11, 26), true);
+
+        assertEq(calendar.isHoliday(2123, 7, 5), true);
+        assertEq(calendar.isHoliday(2123, 12, 24), true);
     }
 
     function test_getHoliday() public {

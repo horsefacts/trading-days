@@ -27,6 +27,7 @@ import {
 import { BokkyPooBahsDateTimeLibrary as LibDateTime } from
     "BokkyPooBahsDateTimeLibrary/contracts/BokkyPooBahsDateTimeLibrary.sol";
 
+import { TradingDaysHook } from "../src/TradingDaysHook.sol";
 import { TradingDays } from "../src/TradingDays.sol";
 import { TradingDaysImplementation } from
     "../src/implementation/TradingDaysImplementation.sol";
@@ -40,10 +41,10 @@ contract TradingDaysTest is Test, Deployers, GasSnapshot {
     using PoolId for IPoolManager.PoolKey;
     using CurrencyLibrary for Currency;
 
-    event DingDingDing();
+    event DingDingDing(address indexed ringer);
 
-    TradingDays tradingDays =
-        TradingDays(address(uint160(Hooks.BEFORE_SWAP_FLAG)));
+    TradingDaysHook tradingDays =
+        TradingDaysHook(address(uint160(Hooks.BEFORE_SWAP_FLAG)));
     PoolManager manager;
     PoolModifyPositionTest modifyPositionRouter;
     PoolSwapTest swapRouter;
@@ -378,8 +379,8 @@ contract TradingDaysTest is Test, Deployers, GasSnapshot {
         PoolSwapTest.TestSettings memory testSettings = PoolSwapTest
             .TestSettings({ withdrawTokens: true, settleUsingTransfer: true });
 
-        vm.expectEmit(false, false, false, true);
-        emit DingDingDing();
+        vm.expectEmit(true, false, false, true);
+        emit DingDingDing(address(swapRouter));
 
         swapRouter.swap(poolKey, params, testSettings);
         assertEq(tradingDays.marketOpened(2023, 6, 5), true);
@@ -399,8 +400,8 @@ contract TradingDaysTest is Test, Deployers, GasSnapshot {
         PoolSwapTest.TestSettings memory testSettings = PoolSwapTest
             .TestSettings({ withdrawTokens: true, settleUsingTransfer: true });
 
-        vm.expectEmit(false, false, false, true);
-        emit DingDingDing();
+        vm.expectEmit(true, false, false, true);
+        emit DingDingDing(address(swapRouter));
 
         swapRouter.swap(poolKey, params, testSettings);
         assertEq(tradingDays.marketOpened(2023, 6, 5), true);
@@ -412,7 +413,7 @@ contract TradingDaysTest is Test, Deployers, GasSnapshot {
         Vm.Log[] memory entries = vm.getRecordedLogs();
         assertEq(entries.length, 3);
 
-        // DingDingDing() does not appear.
+        // DingDingDing(address) does not appear.
         assertEq(
             entries[0].topics[0],
             keccak256(
