@@ -3,13 +3,13 @@ pragma solidity ^0.8.15;
 
 import { DaylightSavingsCalendar } from "./DaylightSavingsCalendar.sol";
 
-library LibDaylightSavings {
-    /// @notice LibDaylightSavings supports 100 years, from 2023 to 2123.
+library DaylightSavingsLibrary {
+    /// @notice DaylightSavingsLibrary supports 100 years, from 2023 to 2123.
     ///         Years outside this range revert with this error.
     error YearNotFound();
 
-    /// @dev Timestamps are stored as seconds since Jan 1, 2023.
-    uint256 private constant EPOCH_START = 1672549200;
+    /// @dev Timestamps are stored as seconds since Jan 1, 2023 UTC.
+    uint256 private constant EPOCH_START = 1672531200;
 
     /// @dev Size of the leading STOP opcode byte in the data contract.
     uint256 private constant STOP_BYTE = 0x1;

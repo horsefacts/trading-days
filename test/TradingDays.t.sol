@@ -31,7 +31,7 @@ import { TradingDaysHook } from "../src/TradingDaysHook.sol";
 import { TradingDays } from "../src/TradingDays.sol";
 import { TradingDaysImplementation } from
     "../src/implementation/TradingDaysImplementation.sol";
-import { Holiday } from "../src/calendars/LibHolidays.sol";
+import { Holiday } from "../src/calendars/HolidaysLibrary.sol";
 import { HolidayCalendar } from "../src/calendars/HolidayCalendar.sol";
 import { DaylightSavingsCalendar } from
     "../src/calendars/DaylightSavingsCalendar.sol";

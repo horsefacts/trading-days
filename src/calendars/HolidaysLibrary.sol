@@ -18,7 +18,7 @@ enum Holiday {
     NEW_YEARS_DAY_OBSERVED
 }
 
-library LibHolidays {
+library HolidaysLibrary {
     /// @notice LibHoliday supports 100 years of holidays from 2023 to 2123.
     ///         Years outside this range revert with this error.
     error YearNotFound();

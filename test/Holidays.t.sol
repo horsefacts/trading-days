@@ -4,10 +4,10 @@ pragma solidity ^0.8.15;
 import "forge-std/Test.sol";
 
 import { HolidayCalendar } from "../src/calendars/HolidayCalendar.sol";
-import { LibHolidays, Holiday } from "../src/calendars/LibHolidays.sol";
+import { HolidaysLibrary, Holiday } from "../src/calendars/HolidaysLibrary.sol";
 
 contract HolidaysTest is Test {
-    using LibHolidays for HolidayCalendar;
+    using HolidaysLibrary for HolidayCalendar;
 
     HolidayCalendar calendar = new HolidayCalendar();
 

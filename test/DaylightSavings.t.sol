@@ -5,10 +5,10 @@ import "forge-std/Test.sol";
 
 import { DaylightSavingsCalendar } from
     "../src/calendars/DaylightSavingsCalendar.sol";
-import { LibDaylightSavings } from "../src/calendars/LibDaylightSavings.sol";
+import { DaylightSavingsLibrary } from "../src/calendars/DaylightSavingsLibrary.sol";
 
 contract DaylightSavingsTest is Test {
-    using LibDaylightSavings for DaylightSavingsCalendar;
+    using DaylightSavingsLibrary for DaylightSavingsCalendar;
 
     DaylightSavingsCalendar dst = new DaylightSavingsCalendar();
 

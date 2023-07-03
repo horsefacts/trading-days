@@ -5,10 +5,10 @@ import { BokkyPooBahsDateTimeLibrary as LibDateTime } from
     "BokkyPooBahsDateTimeLibrary/contracts/BokkyPooBahsDateTimeLibrary.sol";
 
 import { HolidayCalendar } from "./calendars/HolidayCalendar.sol";
-import { LibHolidays, Holiday } from "./calendars/LibHolidays.sol";
+import { HolidaysLibrary, Holiday } from "./calendars/HolidaysLibrary.sol";
 import { DaylightSavingsCalendar } from
     "./calendars/DaylightSavingsCalendar.sol";
-import { LibDaylightSavings } from "./calendars/LibDaylightSavings.sol";
+import { DaylightSavingsLibrary } from "./calendars/DaylightSavingsLibrary.sol";
 
 /// @title TradingDays
 /// @author horsefacts <horsefacts@terminally.online>
@@ -16,8 +16,8 @@ import { LibDaylightSavings } from "./calendars/LibDaylightSavings.sol";
 ///         New York. Go Mets, go Jets, go Knicks, go Rangers, greatest city in
 ///         the world, baby! If you insist, you can use this without the hook.
 abstract contract TradingDays {
-    using LibHolidays for HolidayCalendar;
-    using LibDaylightSavings for DaylightSavingsCalendar;
+    using HolidaysLibrary for HolidayCalendar;
+    using DaylightSavingsLibrary for DaylightSavingsCalendar;
     using LibDateTime for uint256;
 
     /// @notice Data contract encoding NYSE holidays through 2123.
@@ -103,7 +103,9 @@ abstract contract TradingDays {
         return block.timestamp >= start && block.timestamp < end;
     }
 
-    /// @notice Adjust block timestamp to US Eastern Time.
+    /// @notice Adjust block timestamp so that UTC date calculations are
+    ///         localized to US Eastern Time. Subtracts 4 or 5 hours depending
+    ///         on whether it's DST.
     function time() public view virtual returns (uint256) {
         return block.timestamp - (isDST() ? 4 hours : 5 hours);
     }

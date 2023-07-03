@@ -24,8 +24,9 @@ contract TradingDaysHook is BaseHook, TradingDays {
         marketOpened;
 
     constructor(IPoolManager _poolManager, address _holidays, address _dst)
-        BaseHook(_poolManager) TradingDays(_holidays, _dst)
-    {}
+        BaseHook(_poolManager)
+        TradingDays(_holidays, _dst)
+    { }
 
     function getHooksCalls()
         public
