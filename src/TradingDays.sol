@@ -14,6 +14,11 @@ import { DaylightSavingsCalendar } from
     "./calendars/DaylightSavingsCalendar.sol";
 import { LibDaylightSavings } from "./calendars/LibDaylightSavings.sol";
 
+/// @title TradingDays
+/// @author horsefacts <horsefacts@terminally.online>
+/// @notice Need a break from the 24/7 crypto markets? This Uniswap v4 hook
+///         reverts when markets are closed in New York, the greatest city in
+///         the world and the only place where financial markets exist.
 contract TradingDays is BaseHook {
     using LibHolidays for HolidayCalendar;
     using LibDaylightSavings for DaylightSavingsCalendar;
