@@ -5,7 +5,6 @@ import { Hooks } from "@uniswap/v4-core/contracts/libraries/Hooks.sol";
 import { BaseHook } from "v4-periphery/BaseHook.sol";
 import { IPoolManager } from
     "@uniswap/v4-core/contracts/interfaces/IPoolManager.sol";
-import { BalanceDelta } from "@uniswap/v4-core/contracts/types/BalanceDelta.sol";
 import { BokkyPooBahsDateTimeLibrary as LibDateTime } from
     "BokkyPooBahsDateTimeLibrary/contracts/BokkyPooBahsDateTimeLibrary.sol";
 
@@ -39,7 +38,7 @@ contract TradingDays is BaseHook {
     /// @notice It's the weekend. Log off and touch grass.
     error ClosedForWeekend();
 
-    /// @notice Sorry, everyone in New York has gone home for the day.
+    /// @notice Sorry, everyone in New York already went home.
     error AfterHours();
 
     /// @notice Ring the opening bell.
