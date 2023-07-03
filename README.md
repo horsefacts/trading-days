@@ -62,3 +62,7 @@ Inspired by [Mariano's](https://github.com/nanexcool) legendary "office hours" m
 <a href="https://twitter.com/nanexcool/status/1259623747339849729" target="_blank">
   <img src="./img/office_hours.png" width=480px />
 </a>
+
+Thanks to:
+- [saucepoint](https://twitter.com/saucepoint) for their [v4 hooks template](https://github.com/saucepoint/v4-template)
+- [BokkyPooBah](https://twitter.com/BokkyPooBah) for [BokkyPooBahsDateTimeLibrary](https://github.com/bokkypoobah/BokkyPooBahsDateTimeLibrary)
