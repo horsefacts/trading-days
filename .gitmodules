@@ -10,3 +10,6 @@
 [submodule "lib/BokkyPooBahsDateTimeLibrary"]
 	path = lib/BokkyPooBahsDateTimeLibrary
 	url = https://github.com/bokkypoobah/BokkyPooBahsDateTimeLibrary
+[submodule "lib/solady"]
+	path = lib/solady
+	url = https://github.com/vectorized/solady

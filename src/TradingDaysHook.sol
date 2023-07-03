@@ -6,7 +6,7 @@ import { BaseHook } from "v4-periphery/BaseHook.sol";
 import { IPoolManager } from
     "@uniswap/v4-core/contracts/interfaces/IPoolManager.sol";
 
-import { TradingDays, LibDateTime } from "./TradingDays.sol";
+import { TradingDays, LibDateTime, HolidayCalendar, DaylightSavingsCalendar } from "./TradingDays.sol";
 
 /// @title TradingDaysHook
 /// @author horsefacts <horsefacts@terminally.online>
@@ -23,7 +23,7 @@ contract TradingDaysHook is BaseHook, TradingDays {
     mapping(uint256 => mapping(uint256 => mapping(uint256 => bool))) public
         marketOpened;
 
-    constructor(IPoolManager _poolManager, address _holidays, address _dst)
+    constructor(IPoolManager _poolManager, HolidayCalendar _holidays, DaylightSavingsCalendar _dst)
         BaseHook(_poolManager)
         TradingDays(_holidays, _dst)
     { }

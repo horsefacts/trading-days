@@ -42,9 +42,9 @@ abstract contract TradingDays {
     /// @notice Sorry, everyone in New York already went home.
     error AfterHours();
 
-    constructor(address _holidays, address _dst) {
-        holidays = HolidayCalendar(_holidays);
-        dst = DaylightSavingsCalendar(_dst);
+    constructor(HolidayCalendar _holidays, DaylightSavingsCalendar _dst) {
+        holidays = _holidays;
+        dst = _dst;
     }
 
     /// @notice Return true between 9:30 AM and 4:00 PM ET.

@@ -40,6 +40,13 @@ A Uniswap v4 hook that reverts when markets are closed in New York.
 
 - `DingDingDing`: If you perform the first swap of the day, you get to ring the opening bell!
 
+## Deployments
+
+| Network | TradingView                                                                                                                         |
+| ------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| Goerli  | [`0x000000006016c17169c289346015b3c9d42a1218`](https://goerli.etherscan.io/address/0x000000006016c17169c289346015b3c9d42a1218#code) |
+| Mainnet | [`0x000000006016c17169c289346015b3c9d42a1218`](https://etherscan.io/address/0x000000006016c17169c289346015b3c9d42a1218#code)        |
+
 ## Technical Details
 
 The NYSE holiday calendar and Daylight Savings start/end timestamps are stored as [data contracts](https://github.com/dragonfly-xyz/useful-solidity-patterns/tree/main/patterns/big-data-storage).

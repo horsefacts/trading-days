@@ -13,3 +13,4 @@ docs/
 # Dotenv file
 .env
 __pycache__/
+broadcast/

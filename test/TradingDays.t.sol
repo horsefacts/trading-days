@@ -66,7 +66,7 @@ contract TradingDaysTest is Test, Deployers, GasSnapshot {
         // We do that via the Implementation contract to avoid deploying the
         // override with the production contract
         TradingDaysImplementation impl =
-        new TradingDaysImplementation(manager, address(holidays), address(dst), tradingDays);
+        new TradingDaysImplementation(manager, holidays, dst, tradingDays);
         (, bytes32[] memory writes) = vm.accesses(address(impl));
         vm.etch(address(tradingDays), address(impl).code);
 
