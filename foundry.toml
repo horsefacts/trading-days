@@ -4,6 +4,8 @@ out = "out"
 libs = ["lib"]
 ffi = true
 fs_permissions = [{ access = "read-write", path = ".forge-snapshots/"}]
+via_ir = true
+optimizer_runs = 200
 
 [fmt]
 line_length = 80

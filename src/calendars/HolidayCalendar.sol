@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.15;
 
-/// @notice Data contract encoding NYSE holidays from 2023 to 2123.
-///         Each 13-byte block encodes one year, consisting of 11
-///         9-bit values, each representing a month and day. Use
-///         LibHolidays to decode.
+/// @notice Data contract encoding NYSE holidays from 2023 to 2123. Each 13-byte
+///         block encodes one year, consisting of 11 9-bit values, each
+///         representing a month and day. Use LibHolidays to decode.
 contract HolidayCalendar {
     constructor() {
         bytes memory data = (
