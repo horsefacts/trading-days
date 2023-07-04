@@ -13,6 +13,11 @@ contract DaylightSavingsTest is Test {
 
     DaylightSavingsCalendar dst = new DaylightSavingsCalendar();
 
+    function setUp() public pure {
+        bytes32 dirty = keccak256(("dirty bits"));
+        assembly { mstore(0, dirty) }
+    }
+
     function test_DST_StartEndTimestamps() public {
         assertDSTStartEndEq(2023, 1678604400, 1699167600);
         assertDSTStartEndEq(2024, 1710054000, 1730617200);

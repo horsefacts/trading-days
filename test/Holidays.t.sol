@@ -11,6 +11,11 @@ contract HolidaysTest is Test {
 
     HolidayCalendar calendar = new HolidayCalendar();
 
+    function setUp() public pure {
+        bytes32 dirty = keccak256(("dirty bits"));
+        assembly { mstore(0, dirty) }
+    }
+
     function test_Holidays_2023() public {
         assertHolidayDateEq(Holiday.NEW_YEARS_DAY, 2023, 1, 2);
         assertHolidayDateEq(Holiday.MARTIN_LUTHER_KING_JR_DAY, 2023, 1, 16);
